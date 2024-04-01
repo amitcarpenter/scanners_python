@@ -164,7 +164,7 @@ def scan_stocks(data):
 @app.route('/get_eod_scanner_01', methods=['GET'])
 def get_eod_scanner_01():
     category = "Nifty 50"
-    # symbol = "SBIN.NS"
+# symbol = "SBIN.NS"
     if category:
         csv_file_url = csv_urls.get(category)
         
