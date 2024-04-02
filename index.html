@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Data Form</title>
+</head>
+<body>
+    <h1>Get Data Form</h1>
+    <form id="data-form">
+        <label for="category">Category:</label>
+        <input type="text" id="category" name="category"><br><br>
+        
+        <label for="symbol">Symbol:</label>
+        <input type="text" id="symbol" name="symbol"><br><br>
+        
+        <label for="time_period">Select Time Period:</label>
+        <select id="time_period" name="time_period">
+            <option value="5d">Last 5 days</option>
+            <option value="10d">Last 10 days</option>
+            <option value="30d">Last 30 days</option>
+            <option value="5m">Last 5 months</option>
+            <option value="12m">Last 12 months</option>
+        </select><br><br>
+        
+        <label for="volume_threshold">Volume Threshold:</label>
+        <input type="number" id="volume_threshold" name="volume_threshold"><br><br>
+        
+        <label for="rsi_threshold">RSI Threshold:</label>
+        <input type="number" id="rsi_threshold" name="rsi_threshold"><br><br>
+        
+        <button type="submit">Get Data</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('data-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Collect form data
+            const formData = new FormData(event.target);
+
+            // Convert form data to JSON
+            const jsonData = {};
+            formData.forEach(function(value, key){
+                jsonData[key] = value;
+            });
+
+            // Conditionally set category to None if symbol is provided
+            if (jsonData['symbol']) {
+                jsonData['category'] = null;
+            }
+
+            // Calculate start and end dates based on time period selection
+            const today = new Date();
+            const timePeriod = document.getElementById('time_period').value;
+            const [value, unit] = timePeriod.match(/[0-9]+|[a-z]+/gi);
+            const startDate = new Date(today);
+            switch (unit) {
+                case 'd':
+                    startDate.setDate(today.getDate() - parseInt(value));
+                    break;
+                case 'm':
+                    startDate.setMonth(today.getMonth() - parseInt(value));
+                    break;
+                default:
+                    // Handle other units if needed
+            }
+            jsonData['start_date'] = startDate.toISOString().split('T')[0];
+            jsonData['end_date'] = today.toISOString().split('T')[0];
+
+            // Send POST request to server
+            fetch('/api/live_scanner_01', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display response
+                document.getElementById('result').innerText = JSON.stringify(data, null, 2);
+            })
+            .catch(error => {
+                // Display error message
+                document.getElementById('result').innerText = 'Error: ' + error.message;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -75,21 +75,6 @@ def calculate_technical_indicators(data):
     return data
 
 
-def fetch_additional_info_from_csv(symbol, csv_file):
-    try:
-        df = pd.read_csv(csv_file)
-        symbol = symbol.replace(".NS", "")
-        row = df[df['Symbol'] == symbol]
-        if not row.empty:
-            company_name = row.iloc[0]['Company Name']
-            industry = row.iloc[0]['Industry']
-            return {'Company Name': company_name, 'Industry': industry}
-        else:
-            print(f"No data found for symbol: {symbol}")
-            return {'Company Name': None, 'Industry': None}
-    except Exception as e:
-        print(f"Error reading CSV file: {e}")
-        return {'Company Name': None, 'Industry': None}
 
 
 def scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, high_threshold, csv_file):

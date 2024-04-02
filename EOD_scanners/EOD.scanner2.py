@@ -110,7 +110,7 @@ def fetch_additional_info_from_csv(symbol, csv_file):
 @app.route('/get_eod_scanner_02', methods=['GET'])
 def get_eod_scanner_02():
     category = "Nifty 50"
-    start_date = '2022-03-20'
+    start_date = '2023-03-20'
     end_date = '2024-03-28'
     csv_file_url = csv_urls.get(category)
     
