@@ -1,5 +1,4 @@
 import pandas as pd
-import yfinance as yf
 import talib
 
 import os
@@ -26,19 +25,14 @@ def calculate_technical_indicators(data):
     return data
 
 
-def scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, high_threshold, csv_file):
+def scan_stocks_with_additional_info(data, volume_threshold, csv_file):
     results = []
-
     for symbol, stock_data in data.groupby('Symbol'):
         last_row = stock_data.iloc[-1]
         if (
-            last_row['Volume'] > last_row['Volume_MA_5'] and
-            last_row['Volume'] > volume_threshold and
-            last_row['RSI'] > rsi_threshold and
-            last_row['High'] > last_row['Previous_High']
+            last_row['Volume'] > volume_threshold
         ):
             additional_info = fetch_additional_info_from_csv(symbol, csv_file)
-            symbol = symbol.replace(".NS", "")
             result = {
                 'Symbol': symbol,
                 'Stock Name': additional_info['Company Name'],
@@ -57,11 +51,7 @@ def scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, high
     return results_df
 
 
-def live_scanner_01(category, symbol, start_date, end_date, volume_threshold, rsi_threshold):
-    rsi_threshold = int(rsi_threshold)
-    volume_threshold = int(volume_threshold)
-    print("%"*50)
-    high_threshold = 0
+def live_scanner_03(category, symbol, start_date, end_date, volume_threshold):
     csv_file_url = None
     if category:
         csv_file_url = csv_urls.get(category)
@@ -82,10 +72,10 @@ def live_scanner_01(category, symbol, start_date, end_date, volume_threshold, rs
 
         if not data.empty:
             data = calculate_technical_indicators(data)
-            scanned_stocks = scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, high_threshold, csv_file_url)
+            scanned_stocks = scan_stocks_with_additional_info(data, volume_threshold, csv_file_url)
 
             if not scanned_stocks.empty:
-                print("Stocks meeting Scanner 1 conditions:")
+                print("Stocks meeting Scanner 3 conditions:")
                 print(scanned_stocks)
                 return (scanned_stocks.to_dict(orient='records'))
             else:
@@ -98,10 +88,10 @@ def live_scanner_01(category, symbol, start_date, end_date, volume_threshold, rs
         data = fetch_stock_data(symbol, start_date, end_date)
         if not data.empty:
             data = calculate_technical_indicators(data)
-            scanned_stocks = scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, high_threshold, None)
+            scanned_stocks = scan_stocks_with_additional_info(data, volume_threshold, None)
 
             if not scanned_stocks.empty:
-                print("Stocks meeting Scanner 1 conditions:")
+                print("Stocks meeting Scanner 3 conditions:")
                 print(scanned_stocks)
                 return (scanned_stocks.to_dict(orient='records'))
             else:
@@ -110,5 +100,6 @@ def live_scanner_01(category, symbol, start_date, end_date, volume_threshold, rs
         else:
             print("No data available for the selected symbol.")
             return ({'message': "No data available for the selected symbol."})
+
 
 

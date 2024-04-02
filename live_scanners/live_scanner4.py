@@ -1,58 +1,14 @@
 import pandas as pd
 import yfinance as yf
 import talib
-import datetime
-from flask import Flask, jsonify
 
-app = Flask(__name__)
+import os
+import sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
 
-csv_urls = {
-"Nifty 50": "https://archives.nseindia.com/content/indices/ind_nifty50list.csv",
-"Nifty Next 50": "https://archives.nseindia.com/content/indices/ind_niftynext50list.csv",
-"Nifty 100": "https://archives.nseindia.com/content/indices/ind_nifty100list.csv",
-"Nifty 200": "https://archives.nseindia.com/content/indices/ind_nifty200list.csv",
-"Nifty 500": "https://archives.nseindia.com/content/indices/ind_nifty500list.csv",
-"Nifty Smallcap 50": "https://archives.nseindia.com/content/indices/ind_niftysmallcap50list.csv",
-"Nifty Smallcap 100": "https://archives.nseindia.com/content/indices/ind_niftysmallcap100list.csv",
-"Nifty Smallcap 250": "https://archives.nseindia.com/content/indices/ind_niftysmallcap250list.csv",
-"Nifty Midcap 50": "https://archives.nseindia.com/content/indices/ind_niftymidcap50list.csv",
-"Nifty Midcap 100": "https://archives.nseindia.com/content/indices/ind_niftymidcap100list.csv",
-"Nifty Midcap 150": "https://archives.nseindia.com/content/indices/ind_niftymidcap150list.csv"
-}
-
-
-def get_symbols_from_csv(csv_url):
-    try:
-        df = pd.read_csv(csv_url)
-        return list(df['Symbol'] + ".NS")
-    except Exception as e:
-        print(f"Error reading CSV from {csv_url}: {e}")
-        return []
-
-
-def fetch_stock_data(symbol, start_date, end_date):
-    try:
-        stock_data = yf.download(symbol, start=start_date, end=end_date)
-        if not stock_data.empty:
-            ticker = yf.Ticker(symbol)
-            hist = ticker.history(period="max")
-            first_appeared_date = hist.index[0].strftime("%d %B %Y")
-            dividends = ticker.dividends
-            latest_dividend_date = dividends.idxmax() if not dividends.empty else None
-            formatted_dividend_date = latest_dividend_date.strftime("%d %B %Y") if latest_dividend_date else None
-            stock_data['Dividend Date'] = formatted_dividend_date
-            stock_data['First Appeared on'] = first_appeared_date
-            stock_data['Symbol'] = symbol
-            stock_data['52W High'] = stock_data['High'].rolling(window=252, min_periods=1).max()
-            stock_data['52W Low'] = stock_data['Low'].rolling(window=252, min_periods=1).min()
-            
-            return stock_data
-        else:
-            print(f"No data available for {symbol}.")
-            return pd.DataFrame()
-    except Exception as e:
-        print(f"Failed to download data for {symbol}: {e}")
-        return pd.DataFrame()
+from utils.functions import get_symbols_from_csv, fetch_additional_info_from_csv, fetch_stock_data
+from utils.csv import csv_urls
 
 
 def calculate_technical_indicators(data):
@@ -75,9 +31,7 @@ def calculate_technical_indicators(data):
     return data
 
 
-
-
-def scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, high_threshold, csv_file):
+def scan_stocks_with_additional_info(data, csv_file):
     results = []
 
     for symbol, stock_data in data.groupby('Symbol'):
@@ -112,17 +66,8 @@ def scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, high
     return results_df
 
 
-@app.route('/get_stock_data', methods=['GET'])
-def get_stock_data():
-    category = "Nifty 500"
-    # symbol = "ABB.NS"
-    start_date = '2022-03-20'
-    end_date = '2024-03-28'
-    volume_threshold = 200000
-    rsi_threshold = 60
-    high_threshold = 0
+def live_scanner_04(category, symbol, start_date, end_date):
     csv_file_url = None
-    
     if category:
         csv_file_url = csv_urls.get(category)
         if csv_file_url is None:
@@ -142,35 +87,33 @@ def get_stock_data():
 
         if not data.empty:
             data = calculate_technical_indicators(data)
-            scanned_stocks = scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, high_threshold, csv_file_url)
+            scanned_stocks = scan_stocks_with_additional_info(data, csv_file_url)
 
             if not scanned_stocks.empty:
                 print("Stocks meeting Scanner 4 conditions:")
                 print(scanned_stocks)
-                return jsonify(scanned_stocks.to_dict(orient='records'))
+                return (scanned_stocks.to_dict(orient='records'))
             else:
                 print("No stocks found.")
-                return jsonify({'message': "No stocks found."})
+                return ({'message': "No stocks found."})
         else:
             print("No data available for the selected category.")
-            return jsonify({'message': "No data available for the selected category."})
+            return ({'message': "No data available for the selected category."})
     else:
         data = fetch_stock_data(symbol, start_date, end_date)
         if not data.empty:
             data = calculate_technical_indicators(data)
-            scanned_stocks = scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, high_threshold, None)
+            scanned_stocks = scan_stocks_with_additional_info(data, None)
 
             if not scanned_stocks.empty:
                 print("Stocks meeting Scanner 4 conditions:")
                 print(scanned_stocks)
-                return jsonify(scanned_stocks.to_dict(orient='records'))
+                return (scanned_stocks.to_dict(orient='records'))
             else:
                 print("No stocks found.")
-                return jsonify({'message': "No stocks found."})
+                return ({'message': "No stocks found."})
         else:
             print("No data available for the selected symbol.")
-            return jsonify({'message': "No data available for the selected symbol."})
+            return ({'message': "No data available for the selected symbol."})
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
