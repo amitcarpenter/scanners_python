@@ -7,10 +7,11 @@ from live_scanners.live_scanner2 import live_scanner_02
 from live_scanners.live_scanner3 import live_scanner_03
 from live_scanners.live_scanner4 import live_scanner_04
 
+
 app = Flask(__name__)
 
 
-@app.route('/get_data_form', methods=['GET'])
+@app.route('/', methods=['GET'])
 def get_data_form():
     return send_file('index.html')
 
@@ -32,7 +33,6 @@ def live_scanner_01_start():
     end_date = today
     response = live_scanner_01(category, symbol, start_date, end_date, volume_threshold, rsi_threshold)
     return jsonify(response)
-
 
 
 @app.route('/api/live_scanner_02', methods=['POST'])
@@ -85,7 +85,6 @@ def live_scanner_04_start():
     
     response = live_scanner_04(category, symbol, start_date, end_date)
     return jsonify(response)
-
 
 
 if __name__ == "__main__":
