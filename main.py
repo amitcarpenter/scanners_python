@@ -20,10 +20,12 @@ def get_data_form():
 def live_scanner_01_start():
     data = request.json
     print(data)
-    category = data.get('category')
+    index = data.get('index')
     symbol = data.get('symbol')
     volume_threshold = data.get('volume_threshold')
     rsi_threshold = data.get('rsi_threshold')
+    close_number = data.get('close_number')
+    num_periods = data.get('num_periods')
     
     today = datetime.today().date()
     time_period = request.json.get('time_period')
@@ -31,7 +33,7 @@ def live_scanner_01_start():
     
     start_date = (today - timedelta(days=value)) if unit == 'd' else (today - timedelta(days=value*30))
     end_date = today
-    response = live_scanner_01(category, symbol, start_date, end_date, volume_threshold, rsi_threshold)
+    response = live_scanner_01(index, symbol, start_date, end_date, volume_threshold, rsi_threshold, close_number, num_periods)
     return jsonify(response)
 
 
