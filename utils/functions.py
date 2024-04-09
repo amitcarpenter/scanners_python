@@ -43,7 +43,6 @@ def fetch_stock_data(symbol, start_date, end_date):
             stock_data['Symbol'] = symbol
             stock_data['52W High'] = stock_data['High'].rolling(window=252, min_periods=1).max()
             stock_data['52W Low'] = stock_data['Low'].rolling(window=252, min_periods=1).min()
-            
             return stock_data
         else:
             print(f"No data available for {symbol}.")
