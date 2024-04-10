@@ -74,16 +74,24 @@ def live_scanner_02_start():
 def live_scanner_03_start():
     data = request.json
     print(data)
-    category = data.get('category')
+    index = data.get('index')
     symbol = data.get('symbol')
     volume_threshold = data.get('volume_threshold')
+    
     today = datetime.today().date()
     time_period = request.json.get('time_period')
     value, unit = int(time_period[:-1]), time_period[-1]
-    
-    start_date = (today - timedelta(days=value)) if unit == 'd' else (today - timedelta(days=value*30))
+
+    if unit == 'd':
+        start_date = today - timedelta(days=value)
+        end_date = today
+    else:
+        start_date = today - timedelta(days=value*30)
+        end_date = today
     end_date = today
-    response = live_scanner_03(category, symbol, start_date, end_date, volume_threshold)
+    
+    print(start_date , end_date)
+    response = live_scanner_03(index, symbol, start_date, end_date, volume_threshold)
     return jsonify(response)
 
 
@@ -91,16 +99,23 @@ def live_scanner_03_start():
 def live_scanner_04_start():
     data = request.json
     print(data)
-    category = data.get('category')
+    index = data.get('index')
     symbol = data.get('symbol')
+    volume_threshold = int(data.get('volume_threshold'))
+    
     today = datetime.today().date()
     time_period = request.json.get('time_period')
     value, unit = int(time_period[:-1]), time_period[-1]
-    
-    start_date = (today - timedelta(days=value)) if unit == 'd' else (today - timedelta(days=value*30))
+
+    if unit == 'd':
+        start_date = today - timedelta(days=value)
+        end_date = today
+    else:
+        start_date = today - timedelta(days=value*30)
+        end_date = today
     end_date = today
     
-    response = live_scanner_04(category, symbol, start_date, end_date)
+    response = live_scanner_04(index, symbol, start_date, end_date, volume_threshold)
     return jsonify(response)
 
 

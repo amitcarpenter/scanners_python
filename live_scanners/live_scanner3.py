@@ -11,17 +11,8 @@ from utils.csv import csv_urls
 
 
 def calculate_technical_indicators(data):
-    if 'Volume' in data.columns and 'Volume_MA_5' not in data.columns:
-        data['Volume_MA_5'] = data['Volume'].rolling(window=5, min_periods=1).mean()
-
-    if 'Close' in data.columns and 'RSI' not in data.columns:
-        data['RSI'] = talib.RSI(data['Close'], timeperiod=14)
-
-    if 'High' in data.columns and 'Previous_High' not in data.columns:
-        data['Previous_High'] = data['High'].shift(1)
-    
+    data['RSI'] = talib.RSI(data['Close'], timeperiod=14)
     data['Day Change %'] = ((data['Close'] - data['Close'].shift(1)) / data['Close'].shift(1)) * 100
-    
     return data
 
 
@@ -51,17 +42,18 @@ def scan_stocks_with_additional_info(data, volume_threshold, csv_file):
     return results_df
 
 
-def live_scanner_03(category, symbol, start_date, end_date, volume_threshold):
+def live_scanner_03(index, symbol, start_date, end_date, volume_threshold):
+    volume_threshold = int(volume_threshold)
     csv_file_url = None
-    if category:
-        csv_file_url = csv_urls.get(category)
+    if index:
+        csv_file_url = csv_urls.get(index)
         if csv_file_url is None:
-            print(f"No CSV URL found for category: {category}. Exiting program.")
+            print(f"No CSV URL found for index: {index}. Exiting program.")
             return
 
         symbols = get_symbols_from_csv(csv_file_url)
         if not symbols:
-            print(f"No symbols found for category: {category}. Exiting program.")
+            print(f"No symbols found for index: {index}. Exiting program.")
             return
 
         data = pd.DataFrame()
@@ -69,6 +61,7 @@ def live_scanner_03(category, symbol, start_date, end_date, volume_threshold):
             stock_data = fetch_stock_data(symbol, start_date, end_date)
             if not stock_data.empty:
                 data = pd.concat([data, stock_data], axis=0)
+                # print(data)
 
         if not data.empty:
             data = calculate_technical_indicators(data)
@@ -82,8 +75,8 @@ def live_scanner_03(category, symbol, start_date, end_date, volume_threshold):
                 print("No stocks found.")
                 return ({'message': "No stocks found."})
         else:
-            print("No data available for the selected category.")
-            return ({'message': "No data available for the selected category."})
+            print("No data available for the selected index.")
+            return ({'message': "No data available for the selected index."})
     else:
         data = fetch_stock_data(symbol, start_date, end_date)
         if not data.empty:
