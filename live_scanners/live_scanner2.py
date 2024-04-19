@@ -128,8 +128,8 @@ def live_scanner_02(index, symbol, start_date, end_date, volume_threshold):
 # index = 'Nifty 50'
 # # index = None
 # symbol = None
-# start_date = '2024-04-01'
-# end_date = '2024-04-09'
+# start_date = '2024-04-11'
+# end_date = '2024-04-18'
 # volume_threshold = 10000 
 
-# live_scanner_02(index, symbol, start_date, end_date)
+# live_scanner_02(index, symbol, start_date, end_date, volume_threshold)

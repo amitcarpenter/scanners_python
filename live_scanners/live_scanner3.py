@@ -43,7 +43,7 @@ def scan_stocks_with_additional_info(data, volume_threshold, csv_file):
 
 
 def live_scanner_03(index, symbol, start_date, end_date, volume_threshold):
-    volume_threshold = int(volume_threshold)
+    # volume_threshold = int(volume_threshold)
     csv_file_url = None
     if index:
         csv_file_url = csv_urls.get(index)
