@@ -1,6 +1,7 @@
 import pandas as pd
 import yfinance as yf
 import talib
+import numpy as np
 
 import os
 import sys
@@ -17,13 +18,52 @@ def calculate_technical_indicators(data):
     return data
 
 
+def calculate_super_trend(data, period, multiplier):
+    high = data['High']
+    low = data['Low']
+    close = data['Close']
+    
+    atr = talib.ATR(high, low, close, timeperiod=period)
+
+    basic_upper_band = (high + low) / 2 + multiplier * atr
+    basic_lower_band = (high + low) / 2 - multiplier * atr
+
+    super_trend = pd.Series(index=data.index)
+    super_trend.iloc[0] = np.nan
+
+
+    for i in range(1, len(data)):
+        if close.iloc[i-1] <= basic_upper_band.iloc[i-1]:
+            super_trend.iloc[i] = min(basic_upper_band.iloc[i], high.iloc[i])
+        else:
+            super_trend.iloc[i] = min(basic_lower_band.iloc[i], low.iloc[i])
+
+    return super_trend
+
+
+def apply_conditions(data, period1=7, multiplier1=3, period2=4, multiplier2=1):
+
+    data['Super_Trend_1'] = calculate_super_trend(data, period=period1, multiplier=multiplier1)
+    data['Super_Trend_2'] = calculate_super_trend(data, period=period2, multiplier=multiplier2)
+    
+    condition1 = data['Close'] > data['Super_Trend_1']
+    condition2 = (data['Close'] > data['Super_Trend_2']) & (data['Close'].shift(1) <= data['Super_Trend_2'].shift(1))
+    
+    data['Condition_1'] = condition1
+    data['Condition_2'] = condition2
+    
+    print(condition1 , "condition 1")
+    print(condition2 , "condition 2")
+    
+    return data
+
+
 def scan_stocks_with_additional_info(data, csv_file, volume_threshold):
     results = []
     for symbol, stock_data in data.groupby('Symbol'):
-        last_row = stock_data.iloc[-1]
-        supertrend_params_1 = (7, 3)
-        supertrend_params_2 = (4, 1)
-        if (stock_passes_filters(stock_data, [supertrend_params_1, supertrend_params_2])):
+        stock_data_for_super_trade = apply_conditions(stock_data)
+        if stock_data_for_super_trade['Condition_1'].iloc[-1] and stock_data_for_super_trade['Condition_2'].iloc[-1]:
+            last_row = stock_data.iloc[-1]
             additional_info = fetch_additional_info_from_csv(symbol, csv_file)
             result = {
                 'Symbol': symbol,
@@ -41,43 +81,6 @@ def scan_stocks_with_additional_info(data, csv_file, volume_threshold):
             results.append(result)
     results_df = pd.DataFrame(results)
     return results_df
-
-
-# def stock_passes_filters(stock_data, volume_threshold):
-#     # Condition 1: Daily Close Greater than Daily Supertrend(7,3)
-#     supertrend_7_3 = talib.SMA(stock_data['Close'], timeperiod=7)
-#     if stock_data['Close'].iloc[-1] <= supertrend_7_3.iloc[-1]:
-#         return False
-
-#     # Condition 2: Daily Close Crossed above Daily Supertrend(4,1)
-#     supertrend_4_1 = talib.SMA(stock_data['Close'], timeperiod=4)
-#     if not (stock_data['Close'].iloc[-1] > supertrend_4_1.iloc[-1] and stock_data['Close'].iloc[-2] <= supertrend_4_1.iloc[-2]):
-#         return False
-
-#     # Condition 3: Daily Volume Greater than volume_threshold
-#     if stock_data['Volume'].iloc[-1] <= volume_threshold:
-#         return False
-
-#     return True
-
-
-def stock_passes_filters(stock_data, supertrend_params):
-    # Extract Supertrend parameters
-    period_1, multiplier_1 = supertrend_params[0]
-    period_2, multiplier_2 = supertrend_params[1]
-
-    # Condition 1: Daily Close Greater than Daily Supertrend(period_1, multiplier_1)
-    supertrend_1 = talib.SMA(stock_data['Close'], timeperiod=period_1)
-    if stock_data['Close'].iloc[-1] <= supertrend_1.iloc[-1]:
-        return False
-
-    # Condition 2: Daily Close Crossed above Daily Supertrend(period_2, multiplier_2)
-    supertrend_2 = talib.SMA(stock_data['Close'], timeperiod=period_2)
-    if not (stock_data['Close'].iloc[-1] > supertrend_2.iloc[-1] and stock_data['Close'].iloc[-2] <= supertrend_2.iloc[-2]):
-        return False
-
-    return True
-
 
 
 def live_scanner_04(index, symbol, start_date, end_date, volume_threshold):
@@ -132,12 +135,18 @@ def live_scanner_04(index, symbol, start_date, end_date, volume_threshold):
 
 
 
-# index = 'Nifty 500'
-# # index = None
+# import datetime
+
+# index = 'Nifty 50'
 # symbol = None
-# start_date = '2024-04-07'
-# end_date = '2024-04-08'
+# start_date = datetime.datetime.strptime('2024-04-03', '%Y-%m-%d')
+# end_date = datetime.datetime.strptime('2024-04-04', '%Y-%m-%d')
 # volume_threshold = 50000 
 
+# while start_date <= end_date:
+#     current_start_date = start_date.strftime('%Y-%m-%d')
+#     current_end_date = end_date.strftime('%Y-%m-%d')
+#     live_scanner_04(index, symbol, current_start_date, current_end_date, volume_threshold)
+#     start_date += datetime.timedelta(days=1)
+#     end_date += datetime.timedelta(days=1)
 
-# live_scanner_04(index, symbol, start_date, end_date, volume_threshold)
