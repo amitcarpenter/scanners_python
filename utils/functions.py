@@ -1,5 +1,6 @@
 import pandas as pd
 import yfinance as yf
+import talib
 
 
 def get_symbols_from_csv(csv_url):
@@ -43,6 +44,11 @@ def fetch_stock_data(symbol, start_date, end_date):
             stock_data['Symbol'] = symbol
             stock_data['52W High'] = stock_data['High'].rolling(window=252, min_periods=1).max()
             stock_data['52W Low'] = stock_data['Low'].rolling(window=252, min_periods=1).min()
+            stock_data['Day Change %'] = ((stock_data['Close'] - stock_data['Close'].shift(1)) / stock_data['Close'].shift(1)) * 100
+            
+            if 'Close' in stock_data.columns and 'RSI' not in stock_data.columns:
+                stock_data['RSI'] = talib.RSI(stock_data['Close'], timeperiod=14)
+            
             return stock_data
         else:
             print(f"No data available for {symbol}.")
@@ -50,3 +56,4 @@ def fetch_stock_data(symbol, start_date, end_date):
     except Exception as e:
         print(f"Failed to download data for {symbol}: {e}")
         return pd.DataFrame()
+
