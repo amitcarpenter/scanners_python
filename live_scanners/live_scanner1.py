@@ -15,11 +15,12 @@ collection = connect_database(collection_name)
 
 def calculate_technical_indicators(data, num_periods, index):
     if 'Volume' in data.columns and 'Volume_MA_5' not in data.columns:
-        data['Volume_MA_5'] = data['Volume'].rolling(window=5, min_periods=1).mean()
+        data['Volume_MA_5'] = data['Volume'].rolling(window=5).mean()
     if 'Close' in data.columns and 'RSI' not in data.columns:
         data['RSI'] = talib.RSI(data['Close'], timeperiod=14)
     data['Volume_Average'] = data['Volume'].rolling(window=num_periods).mean()
     data['index'] = index
+    
     return data
 
 
@@ -29,7 +30,7 @@ def scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, csv_
     for symbol, stock_data in data.groupby('Symbol'):
         last_row = stock_data.iloc[-1]
 
-        if last_row['Volume'] > last_row['Volume_Average']:
+        if last_row['Volume'] > last_row['Volume_MA_5']:
             if (
                 last_row['Volume'] > volume_threshold and
                 last_row['RSI'] > rsi_threshold and
@@ -42,7 +43,7 @@ def scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, csv_
                     'Symbol': symbol,
                     'Stock Name': additional_info['Company Name'],
                     'Sector': additional_info['Industry'],
-                    
+                
                     'LTP': last_row['Close'],
                     '52W High': last_row['52W High'],
                     '52W Low': last_row['52W Low'],
@@ -58,6 +59,7 @@ def scan_stocks_with_additional_info(data, volume_threshold, rsi_threshold, csv_
 
 
 def live_scanner_01(index, symbol, start_date, end_date, volume_threshold, rsi_threshold, close_number, num_periods):
+    print("live scanner 1")
     rsi_threshold = int(rsi_threshold)
     volume_threshold = int(volume_threshold)
     close_number = int(close_number)
@@ -77,14 +79,14 @@ def live_scanner_01(index, symbol, start_date, end_date, volume_threshold, rsi_t
 
         data = pd.DataFrame()
         for symbol in symbols:
-            stock_data = fetch_stock_data(symbol, start_date, end_date)
+            stock_data = fetch_stock_data(symbol, start_date, end_date, csv_file_url)
             if not stock_data.empty:
                 data = pd.concat([data, stock_data], axis=0)
-                # print(data)
+                print(data)
                 
         if not data.empty:
             data = calculate_technical_indicators(data, num_periods, index)
-            print(data)
+            
             collection.delete_many({})
             records = data.reset_index().to_dict(orient='records') 
             collection.insert_many(records)
@@ -92,7 +94,7 @@ def live_scanner_01(index, symbol, start_date, end_date, volume_threshold, rsi_t
             
             if not scanned_stocks.empty:
                 print("Stocks meeting Scanner 1 conditions:")
-                # print(scanned_stocks.to_string(index=False))
+                print(scanned_stocks)
                 return scanned_stocks.to_dict(orient='records')
             else:
                 print("No stocks found.")
@@ -108,7 +110,7 @@ def live_scanner_01(index, symbol, start_date, end_date, volume_threshold, rsi_t
 
             if not scanned_stocks.empty:
                 print("Stocks meeting Scanner 1 conditions:")
-                print(scanned_stocks)
+                # print(scanned_stocks)
                 return scanned_stocks.to_dict(orient='records')
             else:
                 print("No stocks found.")
@@ -121,8 +123,8 @@ def live_scanner_01(index, symbol, start_date, end_date, volume_threshold, rsi_t
 index = 'Nifty 50'
 # index = None
 symbol = "MARUTI.NS"
-start_date = '2024-03-09'
-end_date = '2024-04-09'
+start_date = '2024-03-29'
+end_date = '2024-04-29'
 volume_threshold = 500000 
 rsi_threshold = 60
 close_number = 50

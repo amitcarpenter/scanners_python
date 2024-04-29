@@ -29,7 +29,7 @@ def fetch_additional_info_from_csv(symbol, csv_file):
         return {'Company Name': None, 'Industry': None}
 
 
-def fetch_stock_data(symbol, start_date, end_date):
+def fetch_stock_data(symbol, start_date, end_date, csv_file):
     try:
         stock_data = yf.download(symbol, start=start_date, end=end_date)
         if not stock_data.empty:
@@ -45,6 +45,12 @@ def fetch_stock_data(symbol, start_date, end_date):
             stock_data['52W High'] = stock_data['High'].rolling(window=252, min_periods=1).max()
             stock_data['52W Low'] = stock_data['Low'].rolling(window=252, min_periods=1).min()
             stock_data['Day Change %'] = ((stock_data['Close'] - stock_data['Close'].shift(1)) / stock_data['Close'].shift(1)) * 100
+            stock_data['LTP'] = stock_data['Close'].iloc[-1]
+            
+            additional_info = fetch_additional_info_from_csv(symbol, csv_file)
+            stock_data['Stock Name'] = additional_info['Company Name'] 
+            stock_data['Sector'] = additional_info['Industry']
+            
             
             if 'Close' in stock_data.columns and 'RSI' not in stock_data.columns:
                 stock_data['RSI'] = talib.RSI(stock_data['Close'], timeperiod=14)
