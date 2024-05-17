@@ -6,8 +6,8 @@ from live_scanners.live_scanner1 import live_scanner_01
 from live_scanners.live_scanner2 import live_scanner_02
 from live_scanners.live_scanner3 import live_scanner_03
 from live_scanners.live_scanner4 import live_scanner_04
-from eod_scanners.eod_scanner1 import eod_scanner_01
-from eod_scanners.eod_scanner2 import eod_scanner_02
+# from eod_scanners.eod_scanner1 import eod_scanner_01
+# from eod_scanners.eod_scanner2 import eod_scanner_02
 
 
 app = Flask(__name__)
@@ -123,28 +123,28 @@ def live_scanner_04_start():
 
 
 # EOD Scanner (end of the day)
-@app.route('/api/eod_scanner_01', methods=['POST'])
-def eod_scanner_01_start():
-    data = request.json
-    print(data)
-    index = data.get('index')
-    symbol = data.get('symbol')
-    volume_threshold = int(data.get('volume_threshold'))
+# @app.route('/api/eod_scanner_01', methods=['POST'])
+# def eod_scanner_01_start():
+#     data = request.json
+#     print(data)
+#     index = data.get('index')
+#     symbol = data.get('symbol')
+#     volume_threshold = int(data.get('volume_threshold'))
     
-    today = datetime.today().date()
-    time_period = request.json.get('time_period')
-    value, unit = int(time_period[:-1]), time_period[-1]
+#     today = datetime.today().date()
+#     time_period = request.json.get('time_period')
+#     value, unit = int(time_period[:-1]), time_period[-1]
 
-    if unit == 'd':
-        start_date = today - timedelta(days=value)
-        end_date = today
-    else:
-        start_date = today - timedelta(days=value*30)
-        end_date = today
-    end_date = today
+#     if unit == 'd':
+#         start_date = today - timedelta(days=value)
+#         end_date = today
+#     else:
+#         start_date = today - timedelta(days=value*30)
+#         end_date = today
+#     end_date = today
     
-    response = eod_scanner_01(index, symbol, start_date, end_date, volume_threshold)
-    return jsonify(response)
+#     response = eod_scanner_01(index, symbol, start_date, end_date, volume_threshold)
+#     return jsonify(response)
 
 
 if __name__ == "__main__":
