@@ -13,7 +13,7 @@ from live_scanners.live_scanner4 import live_scanner_04
 app = Flask(__name__)
 
 
-@app.route('/python', methods=['GET'])
+@app.route('/python/', methods=['GET'])
 def get_data_form():
     return send_file('index.html')
 
