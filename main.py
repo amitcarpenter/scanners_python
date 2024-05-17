@@ -7,6 +7,7 @@ from live_scanners.live_scanner2 import live_scanner_02
 from live_scanners.live_scanner3 import live_scanner_03
 from live_scanners.live_scanner4 import live_scanner_04
 from eod_scanners.eod_scanner1 import eod_scanner_01
+from eod_scanners.eod_scanner2 import eod_scanner_02
 
 
 app = Flask(__name__)

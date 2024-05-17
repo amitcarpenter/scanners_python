@@ -130,4 +130,4 @@ rsi_threshold = 60
 close_number = 50
 num_periods = 5
 
-live_scanner_01(index, symbol, start_date, end_date, volume_threshold, rsi_threshold, close_number, num_periods)
+# live_scanner_01(index, symbol, start_date, end_date, volume_threshold, rsi_threshold, close_number, num_periods)

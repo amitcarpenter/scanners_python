@@ -2,9 +2,6 @@ import pandas as pd
 import yfinance as yf
 from flask import Flask, jsonify
 
-app = Flask(__name__)
-
-
 csv_urls = {
     "Nifty 50": "https://archives.nseindia.com/content/indices/ind_nifty50list.csv",
     "Nifty Next 50": "https://archives.nseindia.com/content/indices/ind_niftynext50list.csv",
@@ -107,8 +104,7 @@ def fetch_additional_info_from_csv(symbol, csv_file):
         return {'Company Name': None, 'Industry': None}
 
 
-@app.route('/get_eod_scanner_02', methods=['GET'])
-def get_eod_scanner_02():
+def eod_scanner_02():
     category = "Nifty 50"
     start_date = '2023-03-20'
     end_date = '2024-03-28'
@@ -172,6 +168,3 @@ def get_eod_scanner_02():
     else:
         return jsonify({'message': "No data available for the selected category."})
 
-
-if __name__ == "__main__":
-    app.run(debug=True)
